@@ -1,0 +1,19 @@
+{
+	"name": "my-app",
+	"type": "module",
+	"scripts": {
+		"test": "bun test",
+		"dev": "bun run --hot src/index.ts"
+	},
+	"dependencies": {
+		"@keyv/sqlite": "^4.0.1",
+		"extract-zip": "^2.0.1",
+		"fuzzysort": "^3.1.0",
+		"hono": "^4.6.17",
+		"keyv": "^5.2.3"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"prettier": "3.4.2"
+	}
+}
