@@ -1,8 +1,13 @@
 import type { ApiSkyblockMember } from "../types/ApiSkyblockProfilesResponse"
+import type { SkyblockProfile } from "./SkyblockProfile"
 
 export class SkyblockMember {
-	constructor(readonly raw: ApiSkyblockMember) {}
+	constructor(private profile: SkyblockProfile, private raw: ApiSkyblockMember) {}
 
+    getProfile() {
+        return this.profile
+    }
+    
 	getSkyblockExperience() {
 		return this.raw?.leveling?.experience ?? 0
 	}
@@ -11,12 +16,29 @@ export class SkyblockMember {
         return this.getSkyblockExperience() / 100
     }
 
-    isSkillsApiEnabled() {
-        return this.raw.player_data?.experience != null
-    }
-
     isCollectionsApiEnabled() {
         return this.raw.collection != null
+    }
+
+    getCollection(id: string) {
+        return this.raw.collection?.[id] ?? 0
+    }
+
+    getUnlockedCollectionTier(id: string): number {
+        const tiers = this.raw.player_data?.unlocked_coll_tiers ?? []
+        let highestUnlockedTier = 0
+        for (const unlockedTier of tiers) {
+            const [collection, tierStr] = unlockedTier.split("_")
+            const tier = parseInt(tierStr)
+            if (collection == id && tier > highestUnlockedTier) {
+                highestUnlockedTier = tier
+            }
+        }
+        return highestUnlockedTier
+    }
+
+    isSkillsApiEnabled() {
+        return this.raw.player_data?.experience != null
     }
 
     getFarmingLevelCap() {
@@ -46,4 +68,6 @@ export class SkyblockMember {
     getSlayerBossKills(slayer: string, tier: number) {
         return this.raw.slayer?.slayer_bosses?.[slayer]?.[`boss_kills_tier_${tier - 1}`] ?? 0
     }
+
+    
 }

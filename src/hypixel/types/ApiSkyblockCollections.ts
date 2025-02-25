@@ -21,3 +21,4 @@ interface ApiCollectionTier {
     version: string
     collections: Record<string, ApiCollectionCategory>
   }
+

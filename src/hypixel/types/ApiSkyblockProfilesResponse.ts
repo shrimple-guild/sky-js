@@ -18,6 +18,7 @@ export interface ApiSkyblockProfile {
 export interface ApiSkyblockMember {
 	player_data?: {
 		experience?: Record<string, number | undefined>
+		unlocked_coll_tiers?: string[]
 	}
 	leveling?: {
 		experience?: number

@@ -13,5 +13,6 @@ export class HypixelService {
 		if (!profiles) return null
 		return new SkyblockProfiles(uuid, profiles)
 	}
+	
 
 }
