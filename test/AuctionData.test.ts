@@ -1,4 +1,4 @@
-import { AuctionData } from "../src/hypixel/data/AuctionData";
+import { AuctionData } from "../src/hypixel/auctions/AuctionData";
 import { ItemService } from "../src/hypixel/data/ItemService";
 
 const dataDir = Bun.env["SKYJS_DATA_DIR"]!!
@@ -14,4 +14,7 @@ const resolved = await auctions.resolveInternalName(item)
 const endTime = performance.now();
 console.log(`Time taken to resolve internal name: ${endTime - startTime} milliseconds`);
 
-console.log(resolved)
+
+await auctions.update()
+
+import "../src/hypixel/auctions/AuctionWorker.ts"
