@@ -49,8 +49,9 @@ export class ItemService {
         return name.replaceAll(":", "-")
     }
 
-    resolveItemFromNbt(nbt: NBT) {
-        
+    resolveItemFromNbt(tag: NBT): string {
+        // @ts-ignore
+        return tag.value["i"]?.value?.value?.[0]?.tag?.value?.ExtraAttributes?.value?.id?.value ?? ""
     }
 
     private getDisplayNameFromJson(itemData: NeuItemJson) {

@@ -7,7 +7,7 @@ export type ApiSkyblockAuctionPage = {
     auctions: ApiSkyblockAuction[]
 }
 
-type ApiSkyblockAuction = {
+export type ApiSkyblockAuction = {
     uuid: string,
     auctioneer: string,
     profile_id: string,
