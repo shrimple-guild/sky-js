@@ -46,13 +46,15 @@ export class CollectionData {
         const collectionData = this.collections[id]
         const individualAmount = member.getCollection(id)
         const tierData = collectionData.tiers.for(individualAmount)
-        const unlockedGuess = Math.max(tierData.getLevel(), member.getUnlockedCollectionTier(id))
+        const coopAmount = member.getProfile().getCollectionAmount(id)
+        const coopTier = collectionData.tiers.for(coopAmount).getLevel()
+        const unlockedGuess = Math.max(tierData.getLevel(), coopTier)
         const collection: CollectionResult = {
             name: collectionData.name,
             id: collectionData.id,
             category: collectionData.category,
             amount: individualAmount,
-            coopAmount: member.getProfile().getCollectionAmount(id),
+            coopAmount,
             unlockedTier: unlockedGuess,
             maxTier: tierData.getMaxLevel(),
         }
