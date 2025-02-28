@@ -24,12 +24,14 @@ export class SkyblockMember {
         return this.raw.collection?.[id] ?? 0
     }
 
+    // this doesn't quite work, but it might be a hypixel API bug?
     getUnlockedCollectionTier(id: string): number {
         const tiers = this.raw.player_data?.unlocked_coll_tiers ?? []
         let highestUnlockedTier = 0
         for (const unlockedTier of tiers) {
-            const [collection, tierStr] = unlockedTier.split("_")
-            const tier = parseInt(tierStr)
+            const split = unlockedTier.split("_")
+            const tier = parseInt(split.pop() ?? "0")
+            const collection = split.join("_")
             if (collection == id && tier > highestUnlockedTier) {
                 highestUnlockedTier = tier
             }
