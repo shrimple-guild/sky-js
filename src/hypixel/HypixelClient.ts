@@ -30,7 +30,7 @@ export class HypixelClient implements IHypixelClient {
 			throw new Error(`HTTP error! Status: ${response.status}`)
 		}
 
-		const data = await response.json() as T
+		const data = (await response.json()) as T
 		return data
 	}
 
@@ -44,7 +44,7 @@ export class HypixelClient implements IHypixelClient {
 			throw new Error(`HTTP error! Status: ${response.status}`)
 		}
 
-		const data = await response.json() as T
+		const data = (await response.json()) as T
 		return data
 	}
 }

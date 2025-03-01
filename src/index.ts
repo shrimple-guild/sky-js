@@ -13,18 +13,17 @@ import { ConstantManager } from "./hypixel/data/ConstantManager"
 
 const app = new Hono()
 const mojangService = new MojangService()
-const hypixelClient = new HypixelClient(Bun.env["HYPIXEL_API_KEY"]!!)
+const hypixelClient = new HypixelClient(Bun.env["HYPIXEL_API_KEY"]!)
 const hypixelService = new HypixelService(hypixelClient)
 
-const path = Bun.env["SKYJS_DATA_DIR"]!!
-const neuRepo = new NeuRepoManager(path);
+const path = Bun.env["SKYJS_DATA_DIR"]!
+const neuRepo = new NeuRepoManager(path)
 const neuConstantManager = new ConstantManager(`${path}/repo/neu/constants`)
 
 const bestiary = new BestiaryData(neuConstantManager)
 const skills = new SkillData(neuConstantManager)
 const slayers = new SlayerData(neuConstantManager)
 const collections = new CollectionData()
-
 
 // load data
 await collections.update()
@@ -56,22 +55,22 @@ app.get("/skyblock/profile/:player", async (c) => {
 			info: {
 				name: profile.getName(),
 				gamemode: profile.getGamemode(),
-				id: profile.getProfileId(),
+				id: profile.getProfileId()
 			},
 			level: level,
 			skills: skillData,
 			slayers: slayerData,
 			bestiary: bestiaryData,
 			collections: collectionData
-		},
+		}
 	})
 })
 
 async function resolvePlayerProfile(playerQuery: string, profileQuery: string | undefined) {
 	const player = await mojangService.get(playerQuery)
 	if (!player) {
-        throw new HttpError(`Player not found for query \"${playerQuery}\"`, 404)
-    }
+		throw new HttpError(`Player not found for query \"${playerQuery}\"`, 404)
+	}
 	const skyblockProfiles = await hypixelService.getSkyblockProfiles(player.uuid)
 	if (!skyblockProfiles) {
 		throw new PlayerHttpError(`No Skyblock players found for ${player.name}`, player, 404)
@@ -81,16 +80,15 @@ async function resolvePlayerProfile(playerQuery: string, profileQuery: string | 
 }
 
 function errorHandler(err: Error | HTTPException, c: Context) {
-	console.error(err);
+	console.error(err)
 	if (err instanceof HTTPException) {
-	  return c.json({ error: err.name, message: err.message });
+		return c.json({ error: err.name, message: err.message })
 	}
 	if (err instanceof HttpError) {
-	  return err.toResponse(c)
+		return err.toResponse(c)
 	}
-	return c.text("Something went wrong", 500);
-  };
-  
+	return c.text("Something went wrong", 500)
+}
 
 app.onError(errorHandler)
 

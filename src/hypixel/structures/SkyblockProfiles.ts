@@ -20,7 +20,10 @@ export class SkyblockProfiles {
 	getMainProfile(): SkyblockProfile {
 		let mainProfile = this.profiles[0]
 		for (const profile of this.profiles) {
-			if (profile.getQueriedMember().getSkyblockExperience() > mainProfile.getQueriedMember().getSkyblockExperience()) {
+			if (
+				profile.getQueriedMember().getSkyblockExperience() >
+				mainProfile.getQueriedMember().getSkyblockExperience()
+			) {
 				mainProfile = profile
 			}
 		}

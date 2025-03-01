@@ -58,4 +58,3 @@ export class SkyblockProfile {
 		return amount
 	}
 }
-

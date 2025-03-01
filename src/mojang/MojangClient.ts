@@ -7,7 +7,7 @@ export class MojangClient implements IMojangClient {
 	async getByName(username: string): Promise<MojangPlayer | null> {
 		const response = await fetch(`https://api.mojang.com/users/profiles/minecraft/${username}`)
 		if (response.status == 200) {
-			const player = await response.json() as ApiMojangPlayer
+			const player = (await response.json()) as ApiMojangPlayer
 			return this.getMojangPlayer(player)
 		} else if (response.status == 404) {
 			return null
@@ -19,7 +19,7 @@ export class MojangClient implements IMojangClient {
 	async getByUuid(uuid: string): Promise<MojangPlayer | null> {
 		const response = await fetch(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid}`)
 		if (response.status == 200) {
-			const player = await response.json() as ApiMojangPlayer
+			const player = (await response.json()) as ApiMojangPlayer
 			return this.getMojangPlayer(player)
 		} else if (response.status == 204) {
 			return null
@@ -34,6 +34,6 @@ export class MojangClient implements IMojangClient {
 }
 
 interface ApiMojangPlayer {
-	name: string,
+	name: string
 	id: string
 }
