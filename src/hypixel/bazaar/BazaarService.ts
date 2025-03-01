@@ -21,10 +21,9 @@ export class BazaarService {
 		this.bazaar = new Bazaar(data)
 		const productIds = this.bazaar.getProductIds()
 		for (const id of productIds) {
-			const internalName = this.itemService.bazaarToInternalName(id)
-			const displayName = this.itemService.getDisplayName(internalName)
-			if (displayName) {
-				this.fuzzySearch.add({ names: [internalName, displayName], result: id })
+			const name = this.itemService.resolveItemFromBazaar(id)
+			if (name) {
+				this.fuzzySearch.add({ names: [name.internalName, name.displayName], result: id })
 			}
 		}
 	}
@@ -54,14 +53,11 @@ export class BazaarService {
     }
 
     resolveProduct(product: BazaarProduct): BazaarProductData | null {
-        const internalName = this.itemService.bazaarToInternalName(product.getProductId())
-		const displayName = this.itemService.getDisplayName(internalName)
-        if (!displayName) {
-            return null
-        }
+        const name = this.itemService.resolveItemFromBazaar(product.getProductId())
+
         return {
-            name: displayName,
-            internalName: internalName,
+            name: name.displayName,
+            internalName: name.internalName,
             productId: product.getProductId(),
             instabuy: product.getInstabuyPrice(),
             instasell: product.getInstasellPrice(),

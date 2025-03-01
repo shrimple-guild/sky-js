@@ -5,7 +5,7 @@ import type { NBT } from "prismarine-nbt"
 
 export class ItemService {
 	private dir: string
-	private items: Record<string, ItemData | undefined>
+	private items: Record<string, ItemName | undefined>
 
 	constructor(dir: string) {
 		this.dir = dir
@@ -14,7 +14,7 @@ export class ItemService {
 
 	async loadItems(): Promise<void> {
 		const files = await fs.readdir(this.dir)
-		const newItems: Record<string, ItemData | undefined> = {}
+		const newItems: Record<string, ItemName | undefined> = {}
 		for (const file of files) {
 			if (file.endsWith(".json")) {
 				const filePath = `${this.dir}/${file}`
@@ -22,7 +22,8 @@ export class ItemService {
 				const data = JSON.parse(fileContent) as NeuItemJson
 				if (this.isItem(data)) {
 					newItems[data.internalname] = {
-						displayName: this.getDisplayNameFromJson(data)
+						displayName: this.getDisplayNameFromJson(data),
+                        internalName: data.internalname,
 					}
 				}
 			}
@@ -34,23 +35,33 @@ export class ItemService {
 		return this.items
 	}
 
-	getDisplayName(internalName: string): string {
-        // TODO: fix this with enchanted books, attribute shards, etc
-		const name = this.items[internalName]?.displayName
+	getDisplayName(internalName: string): ItemName {
+		const name = this.items[internalName]
 		if (name) return name
-		return internalName
+		const displayName = internalName
 			.split(/[;_]/)
 			.map((str) => TextUtils.toTitleCase(str))
 			.join(" ")
+        return { internalName, displayName }
 	}
 
-	bazaarToInternalName(id: string) {
-		const enchantRegex = /ENCHANTMENT_(\D*)_(\d+)/
+    private getInternalNameFromBazaar(id: string) {
+        const enchantRegex = /ENCHANTMENT_(\D*)_(\d+)/
 		const match = enchantRegex.exec(id)
 		if (match) {
 			return `${match[1]};${match[2]}`
 		}
 		return id.replaceAll(":", "-")
+    }
+
+	resolveItemFromBazaar(id: string): ItemName {
+		const internalName = this.getInternalNameFromBazaar(id)
+        const enchantRegex = /(?:ENCHANTMENT_)(?:ULTIMATE_)?(.+)/
+        const enchantment = enchantRegex.exec(id)?.[1]
+        let displayName = enchantment 
+            ? TextUtils.toTitleCase(enchantment) 
+            : this.getDisplayName(internalName).displayName
+        return { internalName, displayName }
 	}
 
 	resolveItemFromNbt(tag: NBT): string {
@@ -69,6 +80,7 @@ export class ItemService {
 	}
 }
 
-type ItemData = {
-	displayName: string
+type ItemName = {
+	displayName: string,
+    internalName: string,
 }
