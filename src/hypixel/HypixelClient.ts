@@ -1,4 +1,5 @@
 import type { IHypixelClient } from "./IHypixelClient"
+import type { ApiBazaarResponse } from "./types/ApiSkyblockBazaar"
 import type { ApiSkyblockCollections } from "./types/ApiSkyblockCollections"
 import type { ApiSkyblockProfile, ApiSkyblockProfilesResponse } from "./types/ApiSkyblockProfilesResponse"
 
@@ -11,37 +12,31 @@ export class HypixelClient implements IHypixelClient {
 	}
 
 	async getSkyblockProfiles(uuid: string): Promise<ApiSkyblockProfile[] | null> {
-		const response = await this.fetchAuthenticated<ApiSkyblockProfilesResponse>("skyblock/profiles", { uuid })
+		const response = await this.fetch<ApiSkyblockProfilesResponse>("skyblock/profiles", true, { uuid })
 		return response.profiles
 	}
 
 	async getSkyblockCollections(): Promise<ApiSkyblockCollections> {
-		const response = await this.fetchResource<ApiSkyblockCollections>("resources/skyblock/collections")
+		const response = await this.fetch<ApiSkyblockCollections>("resources/skyblock/collections", false)
 		return response
 	}
 
-	private async fetchResource<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
-		const url = new URL(`${this.baseUrl}/${endpoint}`)
-		url.search = new URLSearchParams(params).toString()
-
-		const response = await fetch(url.toString())
-
-		if (!response.ok) {
-			throw new Error(`HTTP error! Status: ${response.status}`)
-		}
-
-		const data = (await response.json()) as T
-		return data
+	async getSkyblockBazaar(): Promise<ApiBazaarResponse> {
+		const response = await this.fetch<ApiBazaarResponse>("skyblock/bazaar", false)
+		return response
 	}
 
-	private async fetchAuthenticated<T>(endpoint: string, params: Record<string, string>): Promise<T> {
+	private async fetch<T>(endpoint: string, authenticated: boolean, params: Record<string, string> = {}): Promise<T> {
 		const url = new URL(`${this.baseUrl}/${endpoint}`)
-		url.search = new URLSearchParams({ ...params, key: this.apiKey }).toString()
+		const authenticatedParams = authenticated ? { ...params, key: this.apiKey } : params
+		url.search = new URLSearchParams(authenticatedParams).toString()
+		const urlString = url.toString()
+		const safeUrlString = urlString.replace(this.apiKey, "****")
 
-		const response = await fetch(url.toString())
+		const response = await fetch(urlString)
 
 		if (!response.ok) {
-			throw new Error(`HTTP error! Status: ${response.status}`)
+			throw new Error(`HTTP error! Status: ${response.status}, URL: ${safeUrlString}`)
 		}
 
 		const data = (await response.json()) as T

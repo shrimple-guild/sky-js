@@ -34,22 +34,23 @@ export class ItemService {
 		return this.items
 	}
 
-	getDisplayName(internalName: string): string | undefined {
+	getDisplayName(internalName: string): string {
+        // TODO: fix this with enchanted books, attribute shards, etc
 		const name = this.items[internalName]?.displayName
 		if (name) return name
 		return internalName
-			.split("_")
+			.split(/[;_]/)
 			.map((str) => TextUtils.toTitleCase(str))
 			.join(" ")
 	}
 
-	resolveBazaarName(name: string) {
+	bazaarToInternalName(id: string) {
 		const enchantRegex = /ENCHANTMENT_(\D*)_(\d+)/
-		const match = enchantRegex.exec(name)
+		const match = enchantRegex.exec(id)
 		if (match) {
 			return `${match[1]};${match[2]}`
 		}
-		return name.replaceAll(":", "-")
+		return id.replaceAll(":", "-")
 	}
 
 	resolveItemFromNbt(tag: NBT): string {

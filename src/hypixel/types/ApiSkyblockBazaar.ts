@@ -1,4 +1,4 @@
-type ApiBazaarOrder = {
+export type ApiBazaarOrder = {
 	amount: number
 	pricePerUnit: number
 	orders: number
@@ -16,7 +16,7 @@ type ApiBazaarQuickStatus = {
 	buyOrders: number
 }
 
-type ApiBazaarProduct = {
+export type ApiBazaarProduct = {
 	product_id: string
 	sell_summary: ApiBazaarOrder[]
 	buy_summary: ApiBazaarOrder[]

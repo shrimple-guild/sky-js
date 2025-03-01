@@ -1,22 +1,21 @@
 import { FuzzySearch } from "../../utils/FuzzySearch"
+import type { IHypixelClient } from "../IHypixelClient"
 import type { SkyblockMember } from "../structures/SkyblockMember"
-import type { ApiSkyblockCollections } from "../types/ApiSkyblockCollections"
 import { Level } from "../utils/Level"
 
 export class CollectionData {
-	private static RESOURCE_URL = "https://api.hypixel.net/resources/skyblock/collections"
+	private client: IHypixelClient
 	private collections: Record<string, Collection>
 	private searcher: FuzzySearch<string>
 
-	constructor() {
+	constructor(client: IHypixelClient) {
+		this.client = client
 		this.collections = {}
 		this.searcher = new FuzzySearch()
 	}
 
 	async update() {
-		const response = await fetch(CollectionData.RESOURCE_URL)
-		const responseData = (await response.json()) as ApiSkyblockCollections
-		const apiCollections = responseData.collections
+		const apiCollections = (await this.client.getSkyblockCollections()).collections
 
 		this.collections = {}
 		this.searcher.clear()

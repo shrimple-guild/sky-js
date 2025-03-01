@@ -10,6 +10,8 @@ import { HttpError, PlayerHttpError } from "./errors/HttpError"
 import { HTTPException } from "hono/http-exception"
 import { CollectionData } from "./hypixel/data/CollectionData"
 import { ConstantManager } from "./hypixel/data/ConstantManager"
+import { ItemService } from "./hypixel/data/ItemService"
+import { BazaarService } from "./hypixel/bazaar/BazaarService"
 
 const app = new Hono()
 const mojangService = new MojangService()
@@ -18,15 +20,20 @@ const hypixelService = new HypixelService(hypixelClient)
 
 const path = Bun.env["SKYJS_DATA_DIR"]!
 const neuRepo = new NeuRepoManager(path)
+const itemService = new ItemService(`${path}/repo/neu/items`)
 const neuConstantManager = new ConstantManager(`${path}/repo/neu/constants`)
 
 const bestiary = new BestiaryData(neuConstantManager)
 const skills = new SkillData(neuConstantManager)
 const slayers = new SlayerData(neuConstantManager)
-const collections = new CollectionData()
+const collections = new CollectionData(hypixelClient)
+
+const bazaarService = new BazaarService(itemService, hypixelClient)
 
 // load data
 await collections.update()
+await itemService.loadItems()
+await bazaarService.update() // TODO: write a scheduled task for this
 await neuConstantManager.loadConstants()
 
 console.log("Loaded collections.")
@@ -37,6 +44,15 @@ app.get("/mojang/:id", async (c) => {
 	const player = await mojangService.get(param)
 
 	return c.json(player)
+})
+
+app.get("/skyblock/bazaar", async (c) => {
+	const query = c.req.query("query")
+	if (!query) {
+		return c.json(bazaarService.getProducts())
+	} else {
+		return c.json(bazaarService.searchProduct(query))
+	}
 })
 
 app.get("/skyblock/profile/:player", async (c) => {
