@@ -13,10 +13,11 @@ import { ConstantManager } from "./hypixel/data/ConstantManager"
 import { ItemService } from "./hypixel/data/ItemService"
 import { BazaarService } from "./hypixel/bazaar/BazaarService"
 import { TrophyFishData } from "./hypixel/data/TrophyFishData"
+import { CachedHypixelClient } from "./hypixel/CachedHypixelClient"
 
 const app = new Hono()
 const mojangService = new MojangService()
-const hypixelClient = new HypixelClient(Bun.env["HYPIXEL_API_KEY"]!)
+const hypixelClient = new CachedHypixelClient(new HypixelClient(Bun.env["HYPIXEL_API_KEY"]!))
 const hypixelService = new HypixelService(hypixelClient)
 
 const path = Bun.env["SKYJS_DATA_DIR"]!

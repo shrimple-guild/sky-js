@@ -3,6 +3,7 @@ import type { MojangPlayer } from "./MojangPlayer"
 import { MojangClient } from "./MojangClient"
 import KeyvSqlite from "@keyv/sqlite"
 import Keyv from "keyv"
+import { UUIDUtils } from "../utils/UUIDUtils"
 
 export class CachedMojangClient implements IMojangClient {
 	private cache = new Keyv<MojangPlayer>({
@@ -47,7 +48,7 @@ export class CachedMojangClient implements IMojangClient {
 	}
 
 	private getUuidKey(uuid: string) {
-		return `uuid:${uuid.toLowerCase().replaceAll("-", "")}`
+		return `uuid:${UUIDUtils.compact(uuid)}`
 	}
 
 	private getNameKey(name: string) {
