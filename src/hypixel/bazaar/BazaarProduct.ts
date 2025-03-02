@@ -7,9 +7,9 @@ export class BazaarProduct {
 		this.product = product
 	}
 
-    getProductId() {
-        return this.product.product_id
-    }
+	getProductId() {
+		return this.product.product_id
+	}
 
 	getInstasellPrice(): number | null {
 		return this.product.sell_summary[0]?.pricePerUnit ?? null
@@ -27,14 +27,13 @@ export class BazaarProduct {
 		return this.getBulkPrice(this.product.sell_summary, amount)
 	}
 
-    private getQuantity(orders: ApiBazaarOrder[]) {
+	private getQuantity(orders: ApiBazaarOrder[]) {
 		let amount = 0
 		for (const order of orders) {
 			amount += order.amount * order.orders
 		}
 		return amount
-
-    }
+	}
 
 	private getBulkPrice(orders: ApiBazaarOrder[], amount?: number) {
 		if (amount == null) {

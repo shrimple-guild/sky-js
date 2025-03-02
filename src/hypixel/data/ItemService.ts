@@ -23,7 +23,7 @@ export class ItemService {
 				if (this.isItem(data)) {
 					newItems[data.internalname] = {
 						displayName: this.getDisplayNameFromJson(data),
-                        internalName: data.internalname,
+						internalName: data.internalname
 					}
 				}
 			}
@@ -42,26 +42,26 @@ export class ItemService {
 			.split(/[;_]/)
 			.map((str) => TextUtils.toTitleCase(str))
 			.join(" ")
-        return { internalName, displayName }
+		return { internalName, displayName }
 	}
 
-    private getInternalNameFromBazaar(id: string) {
-        const enchantRegex = /ENCHANTMENT_(\D*)_(\d+)/
+	private getInternalNameFromBazaar(id: string) {
+		const enchantRegex = /ENCHANTMENT_(\D*)_(\d+)/
 		const match = enchantRegex.exec(id)
 		if (match) {
 			return `${match[1]};${match[2]}`
 		}
 		return id.replaceAll(":", "-")
-    }
+	}
 
 	resolveItemFromBazaar(id: string): ItemName {
 		const internalName = this.getInternalNameFromBazaar(id)
-        const enchantRegex = /(?:ENCHANTMENT_)(?:ULTIMATE_)?(.+)/
-        const enchantment = enchantRegex.exec(id)?.[1]
-        let displayName = enchantment 
-            ? TextUtils.toTitleCase(enchantment) 
-            : this.getDisplayName(internalName).displayName
-        return { internalName, displayName }
+		const enchantRegex = /(?:ENCHANTMENT_)(?:ULTIMATE_)?(.+)/
+		const enchantment = enchantRegex.exec(id)?.[1]
+		let displayName = enchantment
+			? TextUtils.toTitleCase(enchantment)
+			: this.getDisplayName(internalName).displayName
+		return { internalName, displayName }
 	}
 
 	resolveItemFromNbt(tag: NBT): string {
@@ -81,6 +81,6 @@ export class ItemService {
 }
 
 type ItemName = {
-	displayName: string,
-    internalName: string,
+	displayName: string
+	internalName: string
 }

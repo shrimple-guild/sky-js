@@ -30,7 +30,6 @@ const slayers = new SlayerData(neuConstantManager)
 const collections = new CollectionData(hypixelClient)
 const trophyFish = new TrophyFishData()
 
-
 const bazaarService = new BazaarService(itemService, hypixelClient)
 
 // load data

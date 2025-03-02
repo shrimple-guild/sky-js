@@ -10,7 +10,6 @@ describe("ItemManager", () => {
 		const name = manager.getDisplayName("GOD_POTION")
 		expect(name.displayName).toBe("God Potion")
 		expect(name.internalName).toBe("GOD_POTION")
-
 	})
 
 	it("should return backup name for nonexistent name", async () => {
