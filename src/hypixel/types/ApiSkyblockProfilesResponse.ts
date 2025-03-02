@@ -49,6 +49,9 @@ export interface ApiSkyblockMember {
 	slayer?: {
 		slayer_bosses?: Record<string, ApiSlayerData | undefined>
 	}
+	trophy_fish?: {
+		rewards: number[]
+	} & Record<string, number | undefined>
 }
 
 export type ApiSlayerData = {

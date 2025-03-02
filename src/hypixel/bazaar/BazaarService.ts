@@ -20,6 +20,7 @@ export class BazaarService {
 		const data = await this.client.getSkyblockBazaar()
 		this.bazaar = new Bazaar(data)
 		const productIds = this.bazaar.getProductIds()
+        this.fuzzySearch.clear()
 		for (const id of productIds) {
 			const name = this.itemService.resolveItemFromBazaar(id)
 			if (name) {

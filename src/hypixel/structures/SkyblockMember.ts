@@ -73,4 +73,8 @@ export class SkyblockMember {
 	getSlayerBossKills(slayer: string, tier: number) {
 		return this.raw.slayer?.slayer_bosses?.[slayer]?.[`boss_kills_tier_${tier - 1}`] ?? 0
 	}
+
+	getTrophyFish(fish: string, tier: string) {
+		return this.raw.trophy_fish?.[`${fish}_${tier}`] ?? 0
+	}
 }

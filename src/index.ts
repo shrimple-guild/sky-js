@@ -12,6 +12,7 @@ import { CollectionData } from "./hypixel/data/CollectionData"
 import { ConstantManager } from "./hypixel/data/ConstantManager"
 import { ItemService } from "./hypixel/data/ItemService"
 import { BazaarService } from "./hypixel/bazaar/BazaarService"
+import { TrophyFishData } from "./hypixel/data/TrophyFishData"
 
 const app = new Hono()
 const mojangService = new MojangService()
@@ -27,10 +28,13 @@ const bestiary = new BestiaryData(neuConstantManager)
 const skills = new SkillData(neuConstantManager)
 const slayers = new SlayerData(neuConstantManager)
 const collections = new CollectionData(hypixelClient)
+const trophyFish = new TrophyFishData()
+
 
 const bazaarService = new BazaarService(itemService, hypixelClient)
 
 // load data
+// await neuRepo.update("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
 await collections.update()
 await itemService.loadItems()
 await bazaarService.update() // TODO: write a scheduled task for this
@@ -64,6 +68,7 @@ app.get("/skyblock/profile/:player", async (c) => {
 	const slayerData = slayers.getAllSlayers(member)
 	const bestiaryData = bestiary.getAllBestiaries(member)
 	const collectionData = collections.getAllCollections(member)
+	const trophyData = trophyFish.getAllTrophyFish(member)
 
 	return c.json({
 		player,
@@ -77,7 +82,8 @@ app.get("/skyblock/profile/:player", async (c) => {
 			skills: skillData,
 			slayers: slayerData,
 			bestiary: bestiaryData,
-			collections: collectionData
+			collections: collectionData,
+			trophyFish: trophyData
 		}
 	})
 })
