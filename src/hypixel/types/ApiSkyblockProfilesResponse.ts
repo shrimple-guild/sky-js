@@ -51,7 +51,31 @@ export interface ApiSkyblockMember {
 	}
 	trophy_fish?: {
 		rewards: number[]
-	} & Record<string, number | undefined>
+	} & Record<string, number | undefined>,
+	dungeons?: {
+		dungeon_types?: {
+			catacombs?: ApiCommonDungeonTypeData & {
+				experience: number
+			}
+			master_catacombs?: ApiCommonDungeonTypeData
+		},
+		player_classes?: {
+			healer?: { experience: number }
+			mage?: { experience: number }
+			berserk?: { experience: number }
+			archer?: { experience: number }
+			tank?: { experience: number }
+		},
+		secrets: number
+	},
+}
+
+interface ApiCommonDungeonTypeData {
+	tier_completions: Record<string, number>
+	milestone_completions: Record<string, number>
+	fastest_time: Record<string, number>
+	fastest_time_s: Record<string, number>
+	fastest_time_s_plus: Record<string, number>
 }
 
 export type ApiSlayerData = {
