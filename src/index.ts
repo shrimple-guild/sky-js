@@ -14,6 +14,7 @@ import { ItemService } from "./hypixel/data/ItemService"
 import { BazaarService } from "./hypixel/bazaar/BazaarService"
 import { TrophyFishData } from "./hypixel/data/TrophyFishData"
 import { CachedHypixelClient } from "./hypixel/CachedHypixelClient"
+import { DungeonsData } from "./hypixel/data/DungeonsData"
 
 const app = new Hono()
 const mojangService = new MojangService()
@@ -30,6 +31,7 @@ const skills = new SkillData(neuConstantManager)
 const slayers = new SlayerData(neuConstantManager)
 const collections = new CollectionData(hypixelClient)
 const trophyFish = new TrophyFishData()
+const dungeons = new DungeonsData(neuConstantManager)
 
 const bazaarService = new BazaarService(itemService, hypixelClient)
 
@@ -69,6 +71,7 @@ app.get("/skyblock/profile/:player", async (c) => {
 	const bestiaryData = bestiary.getAllBestiaries(member)
 	const collectionData = collections.getAllCollections(member)
 	const trophyData = trophyFish.getAllTrophyFish(member)
+	const dungeonsData = dungeons.getAllDungeons(member)
 
 	return c.json({
 		player,
@@ -83,7 +86,8 @@ app.get("/skyblock/profile/:player", async (c) => {
 			slayers: slayerData,
 			bestiary: bestiaryData,
 			collections: collectionData,
-			trophyFish: trophyData
+			trophyFish: trophyData,
+			dungeons: dungeonsData
 		}
 	})
 })

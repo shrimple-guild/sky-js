@@ -77,4 +77,33 @@ export class SkyblockMember {
 	getTrophyFish(fish: string, tier: string) {
 		return this.raw.trophy_fish?.[`${fish}_${tier}`] ?? 0
 	}
+
+	getDungeonXp() {
+		return this.raw.dungeons?.dungeon_types?.catacombs?.experience ?? 0
+	}
+
+	getDungeonData(dungeon: "catacombs" | "master_catacombs", floor: number) {
+		const mode = this.raw.dungeons?.dungeon_types?.[dungeon]
+		if (!mode) return null
+		const fastestTime = mode?.fastest_time[floor] 
+		const fastestTimeS = mode?.fastest_time_s[floor]
+		const fastestTimeSPlus = mode?.fastest_time_s_plus[floor]
+		const tierCompletions = mode?.tier_completions[floor]
+		const milestoneCompletions = mode?.milestone_completions[floor]
+		return {
+			fastestTime,
+			fastestTimeS,
+			fastestTimeSPlus,
+			tierCompletions,
+			milestoneCompletions
+		}
+	}
+
+	getDungeonSecrets() {
+		return this.raw.dungeons?.secrets ?? 0
+	}
+
+	getDungeonClassXp(dungeonClass: "healer" | "tank" | "berserk" | "archer" | "mage") {
+		return this.raw.dungeons?.player_classes?.[dungeonClass]?.experience ?? 0
+	}
 }
