@@ -3,23 +3,24 @@ import { Readable } from "stream"
 import path from "path"
 import type { NeuItemJson } from "../types/NeuItemJson"
 
-
 export class NeuRepoManager {
 	private readonly org: string
-    private readonly repo: string
-    private readonly branch: string
+	private readonly repo: string
+	private readonly branch: string
 	private readonly path: string
 	private constants: Map<string, any>
 	private listeners: RepoListener[]
+	private hasLoaded: boolean
 
 	constructor(org: string, repo: string, branch: string, path: string) {
-        this.repo = repo
-        this.org = org
-        this.branch = branch
+		this.repo = repo
+		this.org = org
+		this.branch = branch
 		this.path = path
 		this.constants = new Map()
 		this.listeners = []
-    }
+		this.hasLoaded = false
+	}
 
 	getConstant<T>(name: string): T {
 		const data = this.constants.get(name)
@@ -42,47 +43,53 @@ export class NeuRepoManager {
 	async load() {
 		console.log(`Checking NEU repository status.`)
 
-        const remoteCommit = await this.fetchLatestCommit()
+		const remoteCommit = await this.fetchLatestCommit()
 		const localCommit = await this.getLocalCommit()
 
-        if (remoteCommit != localCommit) {
+		if (remoteCommit != localCommit) {
 			console.log(`Downloading NEU repository (remote: ${remoteCommit}, local: ${localCommit})`)
 			await this.downloadTar(remoteCommit)
+		} else {
+			if (this.hasLoaded) {
+				console.log(`Local and remote commits match, and constants already loaded. Skipping.`)
+			} else {
+				console.log(`Local and remote commits match. Loading constants from local repository copy.`)
+			}
 		}
 
 		const entries = await this.fetchRepoEntries()
 
-        const items: Record<string, NeuItemJson> = {}
+		const items: Record<string, NeuItemJson> = {}
 
-        for (const entry of entries) {
-            const path = this.splitFileName(entry.path)
-            if (path.extension != "json") continue
-            if (path.directory == "constants") {
-                this.constants.set(path.name, this.bufferToJson(entry.content))
-            } else if (path.directory == "items") {
-                items[path.name] = this.bufferToJson(entry.content)
-            }
-        }
+		for (const entry of entries) {
+			const path = this.splitFileName(entry.path)
+			if (path.extension != "json") continue
+			if (path.directory == "constants") {
+				this.constants.set(path.name, this.bufferToJson(entry.content))
+			} else if (path.directory == "items") {
+				items[path.name] = this.bufferToJson(entry.content)
+			}
+		}
 		this.constants.set("items", items)
 		console.log(`Loaded ${this.constants.size} constants from NEU repository.`)
+		this.hasLoaded = true
 		this.notifyListeners()
-    }
+	}
 
-    
-    private async fetchLatestCommit(): Promise<string> {
-        const commitApiUrl = `https://api.github.com/repos/${this.org}/${this.repo}/commits/${this.branch}`
-        const response = await fetch(commitApiUrl)
-        if (!response.ok) throw new Error(`Failed to fetch commit data: ${response.statusText}`)
+	private async fetchLatestCommit(): Promise<string> {
+		const commitApiUrl = `https://api.github.com/repos/${this.org}/${this.repo}/commits/${this.branch}`
+		const response = await fetch(commitApiUrl)
+		if (!response.ok) throw new Error(`Failed to fetch commit data: ${response.statusText}`)
 
-        const data = (await response.json()) as ApiCommitResponse
-        return data.sha
-    }	
+		const data = (await response.json()) as ApiCommitResponse
+		return data.sha
+	}
 
 	private async downloadTar(commit: string): Promise<ArrayBuffer> {
 		const tarballUrl = `https://api.github.com/repos/${this.org}/${this.repo}/tarball/${commit}`
-        const response = await fetch(tarballUrl)
-        if (!response.ok) throw new Error(`Failed to fetch tarball: ${response.statusText}`)
-        const arrayBuffer = await response.arrayBuffer()
+		const response = await fetch(tarballUrl)
+		if (!response.ok) throw new Error(`Failed to fetch tarball: ${response.statusText}`)
+		const arrayBuffer = await response.arrayBuffer()
 		await Bun.write(this.getNeuRepoPath(), arrayBuffer)
 		await Bun.write(this.getCommitHashPath(), commit)
 		return arrayBuffer
@@ -92,25 +99,25 @@ export class NeuRepoManager {
 		const file = Bun.file(this.getNeuRepoPath())
 		const buffer = Buffer.from(await file.arrayBuffer())
 		return new Promise((resolve, reject) => {
-            const parseStream = new Parser()
-            const entries: TarEntry[] = []
+			const parseStream = new Parser()
+			const entries: TarEntry[] = []
 
-            parseStream.on("entry", (entry) => {
-                const chunks: Buffer[] = []
-                entry.on("data", (chunk: Buffer) => chunks.push(chunk))
+			parseStream.on("entry", (entry) => {
+				const chunks: Buffer[] = []
+				entry.on("data", (chunk: Buffer) => chunks.push(chunk))
 				// @ts-expect-error
-                entry.on("end", () => entries.push({ path: entry.path, content: Buffer.concat(chunks) }))
-            })
+				entry.on("end", () => entries.push({ path: entry.path, content: Buffer.concat(chunks) }))
+			})
 
-            parseStream.on("end", () => resolve(entries))
-            parseStream.on("error", (error) => reject(error))
+			parseStream.on("end", () => resolve(entries))
+			parseStream.on("error", (error) => reject(error))
 
-            const bufferStream = new Readable()
+			const bufferStream = new Readable()
 			// @ts-expect-error
-            bufferStream.pipe(parseStream)
-            bufferStream.push(buffer)
-            bufferStream.push(null)
-        })
+			bufferStream.pipe(parseStream)
+			bufferStream.push(buffer)
+			bufferStream.push(null)
+		})
 	}
 
 	private getNeuRepoPath() {
@@ -127,21 +134,21 @@ export class NeuRepoManager {
 		if (!exists) return "[none]"
 		return commitFile.text()
 	}
-	
+
 	private splitFileName(filePath: string): FilePath {
-        const directory = path.dirname(filePath).split(path.sep).pop() || ""
-        const extension = path.extname(filePath).slice(1)
-        const name = path.basename(filePath, path.extname(filePath))
-        return {
-            directory,
-            name,
-            extension,
-        }
-    }
+		const directory = path.dirname(filePath).split(path.sep).pop() || ""
+		const extension = path.extname(filePath).slice(1)
+		const name = path.basename(filePath, path.extname(filePath))
+		return {
+			directory,
+			name,
+			extension
+		}
+	}
 
 	private bufferToJson(buffer: Buffer): any {
-        return JSON.parse(buffer.toString("utf-8"))
-    }
+		return JSON.parse(buffer.toString("utf-8"))
+	}
 }
 
 type RepoListener = (repo: NeuRepoManager) => void
@@ -151,13 +158,12 @@ interface ApiCommitResponse {
 }
 
 type FilePath = {
-    directory: string
-    name: string
-    extension: string
+	directory: string
+	name: string
+	extension: string
 }
 
-
 type TarEntry = {
-    path: string
-    content: Buffer
+	path: string
+	content: Buffer
 }

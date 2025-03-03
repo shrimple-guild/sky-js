@@ -42,16 +42,18 @@ setInterval(() => {
 	auctionService.update()
 }, 1000 * 60)
 
-setInterval(() => {
-	console.log("Checking for NEU repo updates.")
-	neuRepo.load()
-}, 1000 * 60 * 60)
+setInterval(
+	() => {
+		console.log("Checking for NEU repo updates.")
+		neuRepo.load()
+	},
+	1000 * 60 * 60
+)
 
 await neuRepo.load()
 await collections.update()
-await bazaarService.update() 
-await auctionService.update() 
-
+await bazaarService.update()
+await auctionService.update()
 
 app.get("/mojang/:id", async (c) => {
 	const param = c.req.param("id")

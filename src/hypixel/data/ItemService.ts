@@ -1,4 +1,3 @@
-import * as fs from "fs/promises"
 import type { NeuItemJson } from "../types/NeuItemJson"
 import { TextUtils } from "../../utils/TextUtils"
 import { type NBT } from "prismarine-nbt"
