@@ -39,8 +39,20 @@ const dungeons = new DungeonsData(neuConstantManager)
 const bazaarService = new BazaarService(itemService, hypixelClient)
 const auctionService = new NeuAuctionService(itemService, dataDirectory)
 
+setInterval(() => {
+	console.log("Updating bazaar and auction data.")
+	bazaarService.update()
+	auctionService.update()
+}, 1000 * 60)
+
+setInterval(() => {
+	console.log("Checking for NEU repo updates.")
+	neuRepo.update("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
+}, 1000 * 60 * 60)
+
+// load NEU repo if no local copy exists
+await neuRepo.loadIfNoData("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
 // load data
-await neuRepo.update("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
 await collections.update()
 await itemService.loadItems()
 await bazaarService.update() // TODO: write a scheduled task for this

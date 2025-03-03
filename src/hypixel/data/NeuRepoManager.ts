@@ -1,6 +1,7 @@
 import extract from "extract-zip"
 import renameOverwrite from "rename-overwrite"
 import { EventEmitter } from "node:stream"
+import { exists } from "fs/promises"
 
 export class NeuRepoManager {
 	private repoDir: string
@@ -9,6 +10,15 @@ export class NeuRepoManager {
 	constructor(repoDir: string) {
 		this.repoDir = repoDir
 		this.emitter = new EventEmitter()
+	}
+
+	private hasData() {
+		return exists(this.getCommitHashPath())
+	}
+
+	async loadIfNoData(org: string, repo: string, branch: string) {
+		if (await this.hasData()) return
+		this.update(org, repo, branch)
 	}
 
 	async update(org: string, repo: string, branch: string): Promise<string> {
