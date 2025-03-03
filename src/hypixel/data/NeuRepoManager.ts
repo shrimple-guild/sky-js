@@ -1,77 +1,163 @@
-import extract from "extract-zip"
-import renameOverwrite from "rename-overwrite"
-import { EventEmitter } from "node:stream"
-import { exists } from "fs/promises"
+import { Parser } from "tar"
+import { Readable } from "stream"
+import path from "path"
+import type { NeuItemJson } from "../types/NeuItemJson"
+
 
 export class NeuRepoManager {
-	private repoDir: string
-	private emitter: EventEmitter
+	private readonly org: string
+    private readonly repo: string
+    private readonly branch: string
+	private readonly path: string
+	private constants: Map<string, any>
+	private listeners: RepoListener[]
 
-	constructor(repoDir: string) {
-		this.repoDir = repoDir
-		this.emitter = new EventEmitter()
-	}
+	constructor(org: string, repo: string, branch: string, path: string) {
+        this.repo = repo
+        this.org = org
+        this.branch = branch
+		this.path = path
+		this.constants = new Map()
+		this.listeners = []
+    }
 
-	private hasData() {
-		return exists(this.getCommitHashPath())
-	}
-
-	async loadIfNoData(org: string, repo: string, branch: string) {
-		if (await this.hasData()) return
-		this.update(org, repo, branch)
-	}
-
-	async update(org: string, repo: string, branch: string): Promise<string> {
-		const latestCommit = await this.fetchLatestCommitSha(org, repo, branch)
-		const shouldUpdate = await this.shouldUpdate(latestCommit)
-		if (shouldUpdate) {
-			await this.writeRepository(org, repo, latestCommit)
+	getConstant<T>(name: string): T {
+		const data = this.constants.get(name)
+		if (!data) {
+			throw new Error(`Constant resource ${name} not found`)
 		}
-		this.emitter.emit("dataUpdated")
-		return latestCommit
+		return data as T
 	}
 
-	onReload(event: "dataUpdated", listener: () => void): void {
-		this.emitter.addListener(event, listener)
+	onReload(listener: RepoListener): void {
+		this.listeners.push(listener)
 	}
 
-	private async fetchLatestCommitSha(org: string, repo: string, branch: string): Promise<string> {
-		const commitApiUrl = `https://api.github.com/repos/${org}/${repo}/commits/${branch}`
-		const response = await fetch(commitApiUrl)
-		if (!response.ok) {
-			throw new Error(`Failed to fetch commit data: ${response.statusText}`)
+	private notifyListeners() {
+		for (const listener of this.listeners) {
+			listener(this)
 		}
-		const data = (await response.json()) as ApiCommitResponse
-		return data.sha
 	}
 
-	private async writeRepository(org: string, repo: string, commit: string): Promise<void> {
-		const downloadUrl = `https://github.com/${org}/${repo}/archive/${commit}.zip`
-		const response = await fetch(downloadUrl)
-		if (!response.ok) {
-			throw new Error(`Failed to download repository: ${response.statusText}`)
+	async load() {
+		console.log(`Checking NEU repository status.`)
+
+        const remoteCommit = await this.fetchLatestCommit()
+		const localCommit = await this.getLocalCommit()
+
+        if (remoteCommit != localCommit) {
+			console.log(`Downloading NEU repository (remote: ${remoteCommit}, local: ${localCommit})`)
+			await this.downloadTar(remoteCommit)
 		}
-		const zipPath = `${this.repoDir}/neu.zip`
-		await Bun.write(zipPath, response)
-		await extract(zipPath, { dir: this.repoDir })
-		const extractedFolder = `${this.repoDir}/${repo}-${commit}`
-		await renameOverwrite(extractedFolder, `${this.repoDir}/neu`)
+
+		const entries = await this.fetchRepoEntries()
+
+        const items: Record<string, NeuItemJson> = {}
+
+        for (const entry of entries) {
+            const path = this.splitFileName(entry.path)
+            if (path.extension != "json") continue
+            if (path.directory == "constants") {
+                this.constants.set(path.name, this.bufferToJson(entry.content))
+            } else if (path.directory == "items") {
+                items[path.name] = this.bufferToJson(entry.content)
+            }
+        }
+		this.constants.set("items", items)
+		console.log(`Loaded ${this.constants.size} constants from NEU repository.`)
+		this.notifyListeners()
+    }
+
+    
+    private async fetchLatestCommit(): Promise<string> {
+        const commitApiUrl = `https://api.github.com/repos/${this.org}/${this.repo}/commits/${this.branch}`
+        const response = await fetch(commitApiUrl)
+        if (!response.ok) throw new Error(`Failed to fetch commit data: ${response.statusText}`)
+
+        const data = (await response.json()) as ApiCommitResponse
+        return data.sha
+    }	
+
+	private async downloadTar(commit: string): Promise<ArrayBuffer> {
+		const tarballUrl = `https://api.github.com/repos/${this.org}/${this.repo}/tarball/${commit}`
+        const response = await fetch(tarballUrl)
+        if (!response.ok) throw new Error(`Failed to fetch tarball: ${response.statusText}`)
+        const arrayBuffer = await response.arrayBuffer()
+		await Bun.write(this.getNeuRepoPath(), arrayBuffer)
 		await Bun.write(this.getCommitHashPath(), commit)
+		return arrayBuffer
 	}
 
-	private async shouldUpdate(latestCommit: string) {
-		const commitFile = Bun.file(this.getCommitHashPath())
-		const exists = await commitFile.exists()
-		if (!exists) return true
-		const currentCommit = await commitFile.text()
-		return currentCommit != latestCommit
+	private async fetchRepoEntries(): Promise<TarEntry[]> {
+		const file = Bun.file(this.getNeuRepoPath())
+		const buffer = Buffer.from(await file.arrayBuffer())
+		return new Promise((resolve, reject) => {
+            const parseStream = new Parser()
+            const entries: TarEntry[] = []
+
+            parseStream.on("entry", (entry) => {
+                const chunks: Buffer[] = []
+                entry.on("data", (chunk: Buffer) => chunks.push(chunk))
+				// @ts-expect-error
+                entry.on("end", () => entries.push({ path: entry.path, content: Buffer.concat(chunks) }))
+            })
+
+            parseStream.on("end", () => resolve(entries))
+            parseStream.on("error", (error) => reject(error))
+
+            const bufferStream = new Readable()
+			// @ts-expect-error
+            bufferStream.pipe(parseStream)
+            bufferStream.push(buffer)
+            bufferStream.push(null)
+        })
+	}
+
+	private getNeuRepoPath() {
+		return path.join(this.path, "neu-repo.tar.gz")
 	}
 
 	private getCommitHashPath() {
-		return `${this.repoDir}/commit-hash.txt`
+		return path.join(this.path, "neu-commit-hash.txt")
 	}
+
+	private async getLocalCommit(): Promise<string> {
+		const commitFile = Bun.file(this.getCommitHashPath())
+		const exists = await commitFile.exists()
+		if (!exists) return "[none]"
+		return commitFile.text()
+	}
+	
+	private splitFileName(filePath: string): FilePath {
+        const directory = path.dirname(filePath).split(path.sep).pop() || ""
+        const extension = path.extname(filePath).slice(1)
+        const name = path.basename(filePath, path.extname(filePath))
+        return {
+            directory,
+            name,
+            extension,
+        }
+    }
+
+	private bufferToJson(buffer: Buffer): any {
+        return JSON.parse(buffer.toString("utf-8"))
+    }
 }
+
+type RepoListener = (repo: NeuRepoManager) => void
 
 interface ApiCommitResponse {
 	sha: string
+}
+
+type FilePath = {
+    directory: string
+    name: string
+    extension: string
+}
+
+
+type TarEntry = {
+    path: string
+    content: Buffer
 }

@@ -16,25 +16,22 @@ import { TrophyFishData } from "./hypixel/data/TrophyFishData"
 import { CachedHypixelClient } from "./hypixel/CachedHypixelClient"
 import { DungeonsData } from "./hypixel/data/DungeonsData"
 import { NeuAuctionService } from "./hypixel/neuauctions/NeuAuctionService"
-import path from "node:path"
 
 const dataDirectory = Bun.env["SKYJS_DATA_DIR"]!
-const repoDirectory = path.join(dataDirectory, "repo")
 const app = new Hono()
 const mojangService = new MojangService()
 const hypixelClient = new CachedHypixelClient(new HypixelClient(Bun.env["HYPIXEL_API_KEY"]!))
 const hypixelService = new HypixelService(hypixelClient)
 
-const neuRepo = new NeuRepoManager(repoDirectory)
-const itemService = new ItemService(path.join(repoDirectory, "neu", "items"))
-const neuConstantManager = new ConstantManager(path.join(repoDirectory, "neu", "constants"))
+const neuRepo = new NeuRepoManager("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master", dataDirectory)
+const itemService = new ItemService(neuRepo)
 
-const bestiary = new BestiaryData(neuConstantManager)
-const skills = new SkillData(neuConstantManager)
-const slayers = new SlayerData(neuConstantManager)
+const bestiary = new BestiaryData(neuRepo)
+const skills = new SkillData(neuRepo)
+const slayers = new SlayerData(neuRepo)
 const collections = new CollectionData(hypixelClient)
 const trophyFish = new TrophyFishData()
-const dungeons = new DungeonsData(neuConstantManager)
+const dungeons = new DungeonsData(neuRepo)
 
 const bazaarService = new BazaarService(itemService, hypixelClient)
 const auctionService = new NeuAuctionService(itemService, dataDirectory)
@@ -47,19 +44,14 @@ setInterval(() => {
 
 setInterval(() => {
 	console.log("Checking for NEU repo updates.")
-	neuRepo.update("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
+	neuRepo.load()
 }, 1000 * 60 * 60)
 
-// load NEU repo if no local copy exists
-await neuRepo.loadIfNoData("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
-// load data
+await neuRepo.load()
 await collections.update()
-await itemService.loadItems()
-await bazaarService.update() // TODO: write a scheduled task for this
-await auctionService.update() // TODO: write a scheduled task for this
-await neuConstantManager.loadConstants()
+await bazaarService.update() 
+await auctionService.update() 
 
-console.log("Loaded collections.")
 
 app.get("/mojang/:id", async (c) => {
 	const param = c.req.param("id")

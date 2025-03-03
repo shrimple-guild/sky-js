@@ -1,19 +1,19 @@
 import type { SkyblockMember } from "../structures/SkyblockMember"
 import type { NeuLevelingJson } from "../types/NeuLevelingJson"
 import { Level } from "../utils/Level"
-import type { ConstantManager } from "./ConstantManager"
+import type { NeuRepoManager } from "./NeuRepoManager"
 
 export class DungeonsData {
 	private dungeonLevel: Level
 
-	constructor(repo: ConstantManager) {
+	constructor(repo: NeuRepoManager) {
 		this.dungeonLevel = Level.fromCumulative([50])
 		repo.onReload((repo) => this.update(repo))
 	}
 
-	private update(repo: ConstantManager) {
+	private update(repo: NeuRepoManager) {
 		const data = repo.getConstant<NeuLevelingJson>("leveling")
-		data.catacombs
+		this.dungeonLevel = Level.fromLevel(data.catacombs)
 	}
 
 	getAllDungeons(member: SkyblockMember) {

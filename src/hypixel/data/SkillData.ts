@@ -2,7 +2,7 @@ import { FuzzySearch } from "../../utils/FuzzySearch"
 import { SkyblockMember } from "../structures/SkyblockMember"
 import type { NeuLevelingJson } from "../types/NeuLevelingJson"
 import { Level, type LevelData } from "../utils/Level"
-import type { ConstantManager } from "./ConstantManager"
+import type { NeuRepoManager } from "./NeuRepoManager"
 
 export class SkillData {
 	private skillLevels: Record<string, Level>
@@ -21,12 +21,12 @@ export class SkillData {
 		{ result: "Combat", names: ["combat"] }
 	)
 
-	constructor(repo: ConstantManager) {
+	constructor(repo: NeuRepoManager) {
 		this.skillLevels = {}
 		repo.onReload((repo) => this.update(repo))
 	}
 
-	async update(repo: ConstantManager) {
+	async update(repo: NeuRepoManager) {
 		const data = repo.getConstant<NeuLevelingJson>("leveling")
 		this.skillLevels = {
 			combat: Level.fromLevel(data.leveling_xp),

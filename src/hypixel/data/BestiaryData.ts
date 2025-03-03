@@ -3,7 +3,7 @@ import { TextUtils } from "../../utils/TextUtils"
 import { SkyblockMember } from "../structures/SkyblockMember"
 import type { NeuBestiaryJson, NeuFamilyData } from "../types/NeuBestiaryJson"
 import { Level } from "../utils/Level"
-import type { ConstantManager } from "./ConstantManager"
+import type { NeuRepoManager } from "./NeuRepoManager"
 
 type BestiaryFamily = {
 	name: string
@@ -21,13 +21,13 @@ export class BestiaryData {
 	private families: BestiaryFamily[]
 	private searcher: FuzzySearch<BestiarySearchResult>
 
-	constructor(repo: ConstantManager) {
+	constructor(repo: NeuRepoManager) {
 		this.families = []
 		this.searcher = new FuzzySearch()
 		repo.onReload((repo) => this.update(repo))
 	}
 
-	private update(repo: ConstantManager) {
+	private update(repo: NeuRepoManager) {
 		const { brackets, ...categories } = repo.getConstant<NeuBestiaryJson>("bestiary")
 
 		const bracketLevels: Record<string, Level> = {}
