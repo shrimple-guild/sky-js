@@ -2,30 +2,25 @@ import * as fs from "fs/promises"
 import type { NeuItemJson } from "../types/NeuItemJson"
 import { TextUtils } from "../../utils/TextUtils"
 import { type NBT } from "prismarine-nbt"
+import type { NeuRepoManager } from "./NeuRepoManager"
 
 export class ItemService {
-	private dir: string
 	private items: Record<string, ItemName | undefined>
 	private static RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"]
 
-	constructor(dir: string) {
-		this.dir = dir
+	constructor(repo: NeuRepoManager) {
 		this.items = {}
+		repo.onReload((repo) => this.loadItems(repo))
 	}
 
-	async loadItems(): Promise<void> {
-		const files = await fs.readdir(this.dir)
+	private async loadItems(repo: NeuRepoManager): Promise<void> {
+		const items = repo.getConstant<Record<string, NeuItemJson>>("items")
 		const newItems: Record<string, ItemName | undefined> = {}
-		for (const file of files) {
-			if (file.endsWith(".json")) {
-				const filePath = `${this.dir}/${file}`
-				const fileContent = await fs.readFile(filePath, "utf-8")
-				const data = JSON.parse(fileContent) as NeuItemJson
-				if (this.isItem(data)) {
-					newItems[data.internalname] = {
-						displayName: this.getDisplayNameFromJson(data),
-						internalName: data.internalname
-					}
+		for (const item of Object.values(items)) {
+			if (this.isItem(item)) {
+				newItems[item.internalname] = {
+					displayName: this.getDisplayNameFromJson(item),
+					internalName: item.internalname
 				}
 			}
 		}
