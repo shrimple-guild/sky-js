@@ -4,6 +4,6 @@ export interface NeuLevelingJson {
 	runecrafting_xp: number[]
 	slayer_xp: Record<string, number[]>
 	slayer_to_highest_tier: Record<string, number>
-	social: number[],
+	social: number[]
 	catacombs: number[]
 }

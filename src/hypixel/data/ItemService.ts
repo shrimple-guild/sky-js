@@ -1,7 +1,7 @@
 import * as fs from "fs/promises"
 import type { NeuItemJson } from "../types/NeuItemJson"
 import { TextUtils } from "../../utils/TextUtils"
-import { int, type NBT } from "prismarine-nbt"
+import { type NBT } from "prismarine-nbt"
 
 export class ItemService {
 	private dir: string
@@ -48,7 +48,7 @@ export class ItemService {
 		return this.resolveItemFromInternalName(internalName)
 	}
 
-	private resolveItemFromInternalName(internalName: string): ItemName {
+	resolveItemFromInternalName(internalName: string): ItemName {
 		const name = this.items[internalName]
 		if (name) return name
 		const displayName = internalName
@@ -80,7 +80,13 @@ export class ItemService {
 	private getDisplayNameFromJson(itemData: NeuItemJson) {
 		let cleaned = TextUtils.removeFormatting(itemData.displayname)
 		cleaned = TextUtils.stripNonAscii(cleaned).trim()
-		
+
+		// handle skill exp boost pet items
+		const petItemMatcher = /PET_ITEM_(\w+)_SKILL_BOOST_(\w+)/.exec(itemData.internalname)
+		if (petItemMatcher) {
+			return TextUtils.toTitleCase(`${petItemMatcher[2]} ${petItemMatcher[1]} Exp Boost`)
+		}
+
 		// handle pet display names
 		const petMatcher = /\[Lvl {LVL}\] (.+)/.exec(cleaned)
 		if (petMatcher) {
@@ -98,7 +104,7 @@ export class ItemService {
 
 		// handle enchanted book display names
 		if (cleaned == "Enchanted Book") {
-			const [name, level] = itemData.internalname.split(";") 
+			const [name, level] = itemData.internalname.split(";")
 			return `${TextUtils.toTitleCase(name)} ${level} Enchanted Book`
 		}
 

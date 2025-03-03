@@ -85,7 +85,7 @@ export class SkyblockMember {
 	getDungeonData(dungeon: "catacombs" | "master_catacombs", floor: number) {
 		const mode = this.raw.dungeons?.dungeon_types?.[dungeon]
 		if (!mode) return null
-		const fastestTime = mode?.fastest_time[floor] 
+		const fastestTime = mode?.fastest_time[floor]
 		const fastestTimeS = mode?.fastest_time_s[floor]
 		const fastestTimeSPlus = mode?.fastest_time_s_plus[floor]
 		const tierCompletions = mode?.tier_completions[floor]

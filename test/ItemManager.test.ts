@@ -7,7 +7,7 @@ describe("ItemManager", () => {
 	it("should load items and get the display name of God Potion", async () => {
 		const manager = new ItemService(`${dataDir}/repo/neu/items`)
 		await manager.loadItems()
-		const name = manager.resolveItemFromInternalName("GOD_POTION")
+		const name = manager.resolveItemFromAuctionInternalName("GOD_POTION")
 		expect(name.displayName).toBe("God Potion")
 		expect(name.internalName).toBe("GOD_POTION")
 	})
@@ -15,7 +15,7 @@ describe("ItemManager", () => {
 	it("should return backup name for nonexistent name", async () => {
 		const manager = new ItemService(`${dataDir}/repo/neu/items`)
 		await manager.loadItems()
-		const name = manager.resolveItemFromInternalName("NON_EXISTENT_ITEM")
+		const name = manager.resolveItemFromAuctionInternalName("NON_EXISTENT_ITEM")
 		expect(name.displayName).toBe("Non Existent Item")
 		expect(name.internalName).toBe("NON_EXISTENT_ITEM")
 	})

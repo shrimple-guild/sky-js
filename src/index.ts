@@ -39,7 +39,6 @@ const dungeons = new DungeonsData(neuConstantManager)
 const bazaarService = new BazaarService(itemService, hypixelClient)
 const auctionService = new NeuAuctionService(itemService, dataDirectory)
 
-
 // load data
 await neuRepo.update("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
 await collections.update()

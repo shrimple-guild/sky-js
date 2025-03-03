@@ -53,5 +53,5 @@ export class TextUtils {
 		const last = this.attemptDeromanize(split.pop()!!)
 		split.push(last)
 		return split.join(" ")
- 	}	
+	}
 }

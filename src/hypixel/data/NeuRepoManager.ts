@@ -1,5 +1,4 @@
 import extract from "extract-zip"
-import fs from "node:fs/promises"
 import renameOverwrite from "rename-overwrite"
 import { EventEmitter } from "node:stream"
 
