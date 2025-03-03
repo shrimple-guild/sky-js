@@ -1,11 +1,12 @@
 import * as fs from "fs/promises"
 import type { NeuItemJson } from "../types/NeuItemJson"
 import { TextUtils } from "../../utils/TextUtils"
-import type { NBT } from "prismarine-nbt"
+import { int, type NBT } from "prismarine-nbt"
 
 export class ItemService {
 	private dir: string
 	private items: Record<string, ItemName | undefined>
+	private static RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"]
 
 	constructor(dir: string) {
 		this.dir = dir
@@ -35,7 +36,19 @@ export class ItemService {
 		return this.items
 	}
 
-	getDisplayName(internalName: string): ItemName {
+	resolveItemFromAuctionInternalName(auctionInternalName: string): ItemName {
+		let [internalName, ...attributes] = auctionInternalName.split("+")
+		const attributeRegex = /ATTRIBUTE_(\D+);(\d+)/
+		if (internalName == "ATTRIBUTE_SHARD" && attributes[0]) {
+			const attribute = attributeRegex.exec(attributes[0])
+			if (attribute) {
+				internalName = `ATTRIBUTE_SHARD_${attribute[1]};${attribute[2]}`
+			}
+		}
+		return this.resolveItemFromInternalName(internalName)
+	}
+
+	private resolveItemFromInternalName(internalName: string): ItemName {
 		const name = this.items[internalName]
 		if (name) return name
 		const displayName = internalName
@@ -46,7 +59,7 @@ export class ItemService {
 	}
 
 	private getInternalNameFromBazaar(id: string) {
-		const enchantRegex = /ENCHANTMENT_(\D*)_(\d+)/
+		const enchantRegex = /ENCHANTMENT_(\D+)_(\d+)/
 		const match = enchantRegex.exec(id)
 		if (match) {
 			return `${match[1]};${match[2]}`
@@ -56,12 +69,7 @@ export class ItemService {
 
 	resolveItemFromBazaar(id: string): ItemName {
 		const internalName = this.getInternalNameFromBazaar(id)
-		const enchantRegex = /(?:ENCHANTMENT_)(?:ULTIMATE_)?(.+)/
-		const enchantment = enchantRegex.exec(id)?.[1]
-		let displayName = enchantment
-			? TextUtils.toTitleCase(enchantment)
-			: this.getDisplayName(internalName).displayName
-		return { internalName, displayName }
+		return this.resolveItemFromInternalName(internalName)
 	}
 
 	resolveItemFromNbt(tag: NBT): string {
@@ -70,7 +78,31 @@ export class ItemService {
 	}
 
 	private getDisplayNameFromJson(itemData: NeuItemJson) {
-		return TextUtils.removeFormatting(itemData.displayname)
+		let cleaned = TextUtils.removeFormatting(itemData.displayname)
+		cleaned = TextUtils.stripNonAscii(cleaned).trim()
+		
+		// handle pet display names
+		const petMatcher = /\[Lvl {LVL}\] (.+)/.exec(cleaned)
+		if (petMatcher) {
+			const petName = petMatcher[1]
+			const petRarityNum = parseInt(itemData.internalname.split(";")[1])
+			const rarity = ItemService.RARITIES[petRarityNum]
+			return `${rarity} ${petName}`
+		}
+
+		// handle attribute display names
+		const attributeMatcher = /ATTRIBUTE_SHARD_(\D+);(\d+)/.exec(itemData.internalname)
+		if (attributeMatcher) {
+			return `${TextUtils.toTitleCase(attributeMatcher[1])} ${attributeMatcher[2]} Attribute Shard`
+		}
+
+		// handle enchanted book display names
+		if (cleaned == "Enchanted Book") {
+			const [name, level] = itemData.internalname.split(";") 
+			return `${TextUtils.toTitleCase(name)} ${level} Enchanted Book`
+		}
+
+		return TextUtils.attemptDeromanizeLast(cleaned)
 	}
 
 	private isItem(itemData: NeuItemJson) {

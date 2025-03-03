@@ -1,3 +1,4 @@
+import romans from "romans"
 export class TextUtils {
 	/**
 	 * Removes Minecraft formatting codes from a given text.
@@ -33,4 +34,24 @@ export class TextUtils {
 			return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
 		})
 	}
+
+	static stripNonAscii(text: string): string {
+		return text.replace(/[^\x00-\x7F]/g, "")
+	}
+
+	static attemptDeromanize(text: string): string {
+		try {
+			return romans.deromanize(text).toString()
+		} catch (e) {
+			return text
+		}
+	}
+
+	static attemptDeromanizeLast(text: string): string {
+		const split = text.split(" ")
+		if (split.length <= 1) return text
+		const last = this.attemptDeromanize(split.pop()!!)
+		split.push(last)
+		return split.join(" ")
+ 	}	
 }

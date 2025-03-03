@@ -12,7 +12,9 @@
 		"fuzzysort": "^3.1.0",
 		"hono": "^4.6.17",
 		"keyv": "^5.2.3",
-		"prismarine-nbt": "^2.7.0"
+		"prismarine-nbt": "^2.7.0",
+		"rename-overwrite": "^6.0.2",
+		"romans": "^3.0.0"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",

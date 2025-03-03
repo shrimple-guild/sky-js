@@ -1,5 +1,6 @@
 import extract from "extract-zip"
 import fs from "node:fs/promises"
+import renameOverwrite from "rename-overwrite"
 import { EventEmitter } from "node:stream"
 
 export class NeuRepoManager {
@@ -45,7 +46,7 @@ export class NeuRepoManager {
 		await Bun.write(zipPath, response)
 		await extract(zipPath, { dir: this.repoDir })
 		const extractedFolder = `${this.repoDir}/${repo}-${commit}`
-		await fs.rename(extractedFolder, `${this.repoDir}/neu`)
+		await renameOverwrite(extractedFolder, `${this.repoDir}/neu`)
 		await Bun.write(this.getCommitHashPath(), commit)
 	}
 

@@ -15,16 +15,19 @@ import { BazaarService } from "./hypixel/bazaar/BazaarService"
 import { TrophyFishData } from "./hypixel/data/TrophyFishData"
 import { CachedHypixelClient } from "./hypixel/CachedHypixelClient"
 import { DungeonsData } from "./hypixel/data/DungeonsData"
+import { NeuAuctionService } from "./hypixel/neuauctions/NeuAuctionService"
+import path from "node:path"
 
+const dataDirectory = Bun.env["SKYJS_DATA_DIR"]!
+const repoDirectory = path.join(dataDirectory, "repo")
 const app = new Hono()
 const mojangService = new MojangService()
 const hypixelClient = new CachedHypixelClient(new HypixelClient(Bun.env["HYPIXEL_API_KEY"]!))
 const hypixelService = new HypixelService(hypixelClient)
 
-const path = Bun.env["SKYJS_DATA_DIR"]!
-const neuRepo = new NeuRepoManager(path)
-const itemService = new ItemService(`${path}/repo/neu/items`)
-const neuConstantManager = new ConstantManager(`${path}/repo/neu/constants`)
+const neuRepo = new NeuRepoManager(repoDirectory)
+const itemService = new ItemService(path.join(repoDirectory, "neu", "items"))
+const neuConstantManager = new ConstantManager(path.join(repoDirectory, "neu", "constants"))
 
 const bestiary = new BestiaryData(neuConstantManager)
 const skills = new SkillData(neuConstantManager)
@@ -34,12 +37,15 @@ const trophyFish = new TrophyFishData()
 const dungeons = new DungeonsData(neuConstantManager)
 
 const bazaarService = new BazaarService(itemService, hypixelClient)
+const auctionService = new NeuAuctionService(itemService, dataDirectory)
+
 
 // load data
-// await neuRepo.update("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
+await neuRepo.update("NotEnoughUpdates", "NotEnoughUpdates-REPO", "master")
 await collections.update()
 await itemService.loadItems()
 await bazaarService.update() // TODO: write a scheduled task for this
+await auctionService.update() // TODO: write a scheduled task for this
 await neuConstantManager.loadConstants()
 
 console.log("Loaded collections.")
@@ -59,6 +65,11 @@ app.get("/skyblock/bazaar", async (c) => {
 	} else {
 		return c.json(bazaarService.searchProduct(query))
 	}
+})
+
+app.get("/skyblock/lowestbin/:query", async (c) => {
+	const query = c.req.param("query")
+	return c.json(auctionService.searchForAuction(query))
 })
 
 app.get("/skyblock/profile/:player", async (c) => {
