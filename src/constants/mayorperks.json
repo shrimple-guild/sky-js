@@ -1,0 +1,50 @@
+{
+    "Aatrox": {
+      "SLASHED Pricing": "cheaper slayers",
+      "Slayer XP Buff": "slayer xp",
+      "Pathfinder": "rare drops"
+    },
+    "Cole": {
+      "Prospection": "minions",
+      "Mining XP Buff": "wisdom",
+      "Mining Fiesta": "fiesta",
+      "Molten Forge": "forge"
+    },
+    "Diana": {
+      "Lucky!": "pet luck",
+      "Mythological Ritual": "mythos",
+      "Pet XP Buff": "pet xp",
+      "Sharing is Caring": "exp share"
+    },
+    "Diaz": {
+      "Shopping Spree": "npc limit",
+      "Volume Trading": "volume trading",
+      "Stock Exchange": "stonk auction",
+      "Long Term Investment": "long term investment"
+    },
+    "Finnegan": {
+      "Pelt-pocalypse": "pelts",
+      "GOATed": "contests",
+      "Blooming Business": "new visitors",
+      "Pest Eradicator": "pests"
+    },
+    "Foxy": {
+      "Sweet Benevolence": "extra event drops",
+      "A Time for Giving": "party",
+      "Chivalrous Carnival": "carnival",
+      "Extra Event (Mining)": "fiesta",
+      "Extra Event (Fishing)": "fishing festival",
+      "Extra Event (Spooky)": "spooky fest"
+    },
+    "Marina": {
+      "Fishing XP Buff": "fishing xp",
+      "Luck of the Sea 2.0": "scc",
+      "Fishing Festival": "festival",
+      "Double Trouble": "double hook"
+    },
+    "Paul": {
+      "Marauder": "cheaper chest",
+      "EZPZ": "ezpz",
+      "Benediction": "blessing"
+    }
+  }

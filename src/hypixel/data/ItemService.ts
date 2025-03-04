@@ -30,7 +30,7 @@ export class ItemService {
 		return this.items
 	}
 
-	resolveItemFromAuctionInternalName(auctionInternalName: string): ItemName {
+	resolveItemFromAuctionInternalName(auctionInternalName: string): ItemName | null {
 		let [internalName, ...attributes] = auctionInternalName.split("+")
 		const attributeRegex = /ATTRIBUTE_(\D+);(\d+)/
 		if (internalName == "ATTRIBUTE_SHARD" && attributes[0]) {
@@ -38,6 +38,8 @@ export class ItemService {
 			if (attribute) {
 				internalName = `ATTRIBUTE_SHARD_${attribute[1]};${attribute[2]}`
 			}
+		} else if (attributes) {
+			return null
 		}
 		return this.resolveItemFromInternalName(internalName)
 	}

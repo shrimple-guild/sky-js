@@ -2,6 +2,7 @@ import { Parser } from "tar"
 import { Readable } from "stream"
 import path from "path"
 import type { NeuItemJson } from "../types/NeuItemJson"
+import { logger } from "../../logging/Logger"
 
 export class NeuRepoManager {
 	private readonly org: string
@@ -41,21 +42,29 @@ export class NeuRepoManager {
 	}
 
 	async load() {
-		console.log(`Checking NEU repository status.`)
-
-		const remoteCommit = await this.fetchLatestCommit()
-		const localCommit = await this.getLocalCommit()
-
+		logger.log(`Checking NEU repository status.`)
+		const promises = [this.getLocalCommit(), this.fetchLatestCommit()]
+		const [localCommit, remoteCommit] = await Promise.all(promises)
+		let shouldLoadTar = !this.hasLoaded
+		logger.debug(`- Remote commit: ${remoteCommit}`)
+		logger.debug(`- Local commit: ${localCommit}`)
 		if (remoteCommit != localCommit) {
-			console.log(`Downloading NEU repository (remote: ${remoteCommit}, local: ${localCommit})`)
+			logger.debug(`Downloading NEU repository.`)
+			const startTime = performance.now()
 			await this.downloadTar(remoteCommit)
-		} else {
-			if (this.hasLoaded) {
-				console.log(`Local and remote commits match, and constants already loaded. Skipping.`)
-			} else {
-				console.log(`Local and remote commits match. Loading constants from local repository copy.`)
-			}
+			const endTime = performance.now()
+			shouldLoadTar = true
+			logger.debug(`Downloaded in ${(endTime - startTime).toFixed(2)} ms.`)
 		}
+
+		if (!shouldLoadTar) {
+			logger.debug("Already loaded constants. Skipping.")
+			return
+		} else {
+			logger.debug("Loading constants from this commit.")
+		}
+
+		const startTime = performance.now()
 
 		const entries = await this.fetchRepoEntries()
 
@@ -71,7 +80,10 @@ export class NeuRepoManager {
 			}
 		}
 		this.constants.set("items", items)
-		console.log(`Loaded ${this.constants.size} constants from NEU repository.`)
+		const endTime = performance.now()
+		const loadTime = (endTime - startTime).toFixed(2)
+
+		logger.log(`Loaded ${this.constants.size} constants from NEU repository (${loadTime} ms).`)
 		this.hasLoaded = true
 		this.notifyListeners()
 	}

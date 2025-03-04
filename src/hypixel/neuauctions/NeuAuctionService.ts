@@ -33,6 +33,7 @@ export class NeuAuctionService {
 		const newItems = []
 		for (const [auctionInternalName, lowestBin] of Object.entries(currentLowestBins)) {
 			const name = this.itemService.resolveItemFromAuctionInternalName(auctionInternalName)
+			if (!name) continue
 			newItems.push({ lowestBin, ...name, timestamp: this.timestamp })
 		}
 		this.insertIntoDatabase(newItems)

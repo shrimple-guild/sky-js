@@ -9,16 +9,21 @@ import { SlayerData } from "./hypixel/data/SlayerData"
 import { HttpError, PlayerHttpError } from "./errors/HttpError"
 import { HTTPException } from "hono/http-exception"
 import { CollectionData } from "./hypixel/data/CollectionData"
-import { ConstantManager } from "./hypixel/data/ConstantManager"
 import { ItemService } from "./hypixel/data/ItemService"
 import { BazaarService } from "./hypixel/bazaar/BazaarService"
 import { TrophyFishData } from "./hypixel/data/TrophyFishData"
 import { CachedHypixelClient } from "./hypixel/CachedHypixelClient"
 import { DungeonsData } from "./hypixel/data/DungeonsData"
 import { NeuAuctionService } from "./hypixel/neuauctions/NeuAuctionService"
+import { logger as honoLogger } from "hono/logger"
+import { logger } from "./logging/Logger"
 
+logger.log("Starting.")
 const dataDirectory = Bun.env["SKYJS_DATA_DIR"]!
 const app = new Hono()
+
+app.use(honoLogger())
+
 const mojangService = new MojangService()
 const hypixelClient = new CachedHypixelClient(new HypixelClient(Bun.env["HYPIXEL_API_KEY"]!))
 const hypixelService = new HypixelService(hypixelClient)
@@ -37,14 +42,14 @@ const bazaarService = new BazaarService(itemService, hypixelClient)
 const auctionService = new NeuAuctionService(itemService, dataDirectory)
 
 setInterval(() => {
-	console.log("Updating bazaar and auction data.")
+	logger.log("Updating bazaar and auction data.")
 	bazaarService.update()
 	auctionService.update()
 }, 1000 * 60)
 
 setInterval(
 	() => {
-		console.log("Checking for NEU repo updates.")
+		logger.log("Checking for NEU repo updates.")
 		neuRepo.load()
 	},
 	1000 * 60 * 60
@@ -55,12 +60,16 @@ await collections.update()
 await bazaarService.update()
 await auctionService.update()
 
+
 app.get("/mojang/:id", async (c) => {
 	const param = c.req.param("id")
-	console.log(`Mojang query for player ${param}`)
 	const player = await mojangService.get(param)
 
 	return c.json(player)
+})
+
+app.get("/skyblock/items", async (c) => {
+	return c.json(itemService.getItems())
 })
 
 app.get("/skyblock/bazaar", async (c) => {
